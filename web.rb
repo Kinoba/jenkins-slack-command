@@ -58,7 +58,8 @@ post '/' do
 
   # Make jenkins request
   json = JSON.generate(parameter: parameters)
-  RestClient.post "#{jenkins_job_url}/build?token=#{jenkins_token}", json: json, 'Jenkins-Crumb': crumb
+  p RestClient.post "#{jenkins_job_url}/build?token=#{jenkins_token}", {json: json}, {'Jenkins-Crumb': crumb}
+  RestClient.post "#{jenkins_job_url}/build?token=#{jenkins_token}", {json: json}, {'Jenkins-Crumb': crumb}
 
   # Build url
   build_url = "#{jenkins_job_url}/#{next_build_number}"

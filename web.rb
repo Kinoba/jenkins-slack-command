@@ -16,7 +16,7 @@ post '/' do
   return [403, 'No jenkins token setup'] unless jenkins_token = ENV['JENKINS_TOKEN']
 
   # Verify slack token matches environment variable
-  return [401, 'No authorized for this command'] unless slack_token == params['token']
+  return [401, 'Not authorized for this command'] unless slack_token == params['token']
 
   # Split command text
   text_parts = params['text'].split(' ')
@@ -46,6 +46,15 @@ post '/' do
   resp = RestClient.get "#{jenkins_job_url}/api/json"
   resp_json = JSON.parse(resp.body)
   next_build_number = resp_json['nextBuildNumber']
+
+  p ""
+  p "______________________________________________________________________________"
+  p ""
+  p slack_token
+  p jenkins_url
+  p jenkins_token
+  p crumb
+  p next_build_number
 
   # Make jenkins request
   json = JSON.generate(parameter: parameters)

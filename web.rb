@@ -13,6 +13,7 @@ post '/' do
   # Verify all environment variables are set
   return [403, 'No slack token setup'] unless slack_token = ENV['SLACK_TOKEN']
   return [403, 'No jenkins url setup'] unless jenkins_url = ENV['JENKINS_URL']
+  return [403, 'No jenkins base url setup'] unless jenkins_base_url = ENV['JENKINS_BASE_URL']
   return [403, 'No jenkins token setup'] unless jenkins_token = ENV['JENKINS_TOKEN']
 
   # Verify slack token matches environment variable
@@ -47,27 +48,17 @@ post '/' do
   resp_json = JSON.parse(resp.body)
   next_build_number = resp_json['nextBuildNumber']
 
-  p ""
-  p "______________________________________________________________________________"
-  p ""
-  p slack_token
-  p jenkins_url
-  p jenkins_token
-  p crumb
-  p next_build_number
-
   # Make jenkins request
   json = JSON.generate(parameter: parameters)
-  p RestClient.post "#{jenkins_job_url}/build?token=#{jenkins_token}", {json: json}, {'Jenkins-Crumb': crumb}
-  RestClient.post "#{jenkins_job_url}/build?token=#{jenkins_token}", {json: json}, {'Jenkins-Crumb': crumb}
+  RestClient.post "#{jenkins_job_url}/build?token=#{jenkins_token}", { json: json }, 'Jenkins-Crumb': crumb.to_s
 
   # Build url
-  build_url = "#{jenkins_job_url}/#{next_build_number}"
+  build_url = "#{jenkins_base_url}/job/#{job}/#{next_build_number}/console"
 
   slack_webhook_url = ENV['SLACK_WEBHOOK_URL']
   if slack_webhook_url
-    notifier = Slack::Notifier.new slack_webhook_url
-    notifier.ping "Started job '#{job}' - #{build_url}"
+    notifier = Slack::Notifier.new slack_webhook_url, username: 'jenkins'
+    notifier.ping "Started job '#{job}' - #{build_url}", icon_url: 'https://wiki.jenkins.io/download/attachments/2916393/logo.png?version=1&modificationDate=1302753947000&api=v2'
   end
 
   build_url
